@@ -19,7 +19,7 @@ func Setup(cfg config.Logging) (func(), error) {
 	}
 
 	var w io.Writer
-	var cleanup func() = func() {}
+	cleanup := func() {}
 	switch cfg.StreamKey() {
 	case "stdout":
 		w = os.Stdout

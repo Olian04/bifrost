@@ -70,7 +70,7 @@ func run(ctx context.Context, c *cli.Command) error {
 		}
 		reger = prometheus.WrapRegistererWith(labels, reger)
 	}
-	m, brokerProm, err := metrics.New(reger, cfg.Metrics, cfg.Bridges)
+	m, brokerMetrics, err := metrics.New(reger, cfg.Metrics, cfg.Bridges)
 	if err != nil {
 		return fmt.Errorf("metrics: %w", err)
 	}
@@ -113,7 +113,7 @@ func run(ctx context.Context, c *cli.Command) error {
 			continue
 		}
 		toCluster := cfg.Clusters[clusterName]
-		p, err := bifrostkafka.NewProducer(&toCluster, kafkaHooks(brokerProm, clusterName))
+		p, err := bifrostkafka.NewProducer(&toCluster, kafkaClientHooks(brokerMetrics, clusterName))
 		if err != nil {
 			return fmt.Errorf("producer %q: %w", clusterName, err)
 		}
@@ -129,7 +129,7 @@ func run(ctx context.Context, c *cli.Command) error {
 				&fromCluster,
 				br.EffectiveConsumerGroup(),
 				br.From.Topic,
-				kafkaHooks(brokerProm, br.From.Cluster),
+				kafkaClientHooks(brokerMetrics, br.From.Cluster),
 			)
 			if err != nil {
 				return fmt.Errorf("bridge %q consumer: %w", br.Name, err)
@@ -143,7 +143,7 @@ func run(ctx context.Context, c *cli.Command) error {
 				"from_cluster", br.From.Cluster,
 				"to_cluster", br.To.Cluster,
 			)
-			if err := bridge.Run(gctx, metrics.BridgeIdentityFrom(br), consumer, producer, m); err != nil {
+			if err := bridge.Run(gctx, bridge.IdentityFrom(br), consumer, producer, m); err != nil {
 				if errors.Is(err, context.Canceled) {
 					return nil
 				}
@@ -159,11 +159,11 @@ func run(ctx context.Context, c *cli.Command) error {
 	return nil
 }
 
-func kafkaHooks(bp *metrics.BrokerProm, cluster string) []kgo.Hook {
-	if bp == nil {
+func kafkaClientHooks(broker *metrics.BrokerMetrics, cluster string) []kgo.Hook {
+	if broker == nil {
 		return nil
 	}
-	h := bp.HookFor(cluster)
+	h := broker.HookFor(cluster)
 	if h == nil {
 		return nil
 	}

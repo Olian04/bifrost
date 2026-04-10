@@ -8,9 +8,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 )
 
-// RegisterPlatformCollectors registers standard Go, build, and process collectors when enabled in cfg.
+// RegisterRuntimeCollectors registers standard Go, build, and process collectors when enabled in cfg.
 // Go projects conventionally expose these as go_* and process_* collector families.
-func RegisterPlatformCollectors(reg prometheus.Registerer, g bifrostconfig.MetricGroups) error {
+func RegisterRuntimeCollectors(reg prometheus.Registerer, g bifrostconfig.MetricGroups) error {
 	if g.GroupGolang() || g.GroupProcess() {
 		if g.GroupGolang() {
 			if err := reg.Register(collectors.NewBuildInfoCollector()); err != nil {
@@ -26,6 +26,5 @@ func RegisterPlatformCollectors(reg prometheus.Registerer, g bifrostconfig.Metri
 			}
 		}
 	}
-	// TCP metrics are registered from broker hooks in broker_prom.go (cross-platform).
 	return nil
 }

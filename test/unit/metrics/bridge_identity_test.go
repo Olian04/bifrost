@@ -3,12 +3,12 @@ package metrics_test
 import (
 	"testing"
 
+	"github.com/lolocompany/bifrost/pkg/bridge"
 	bifrostconfig "github.com/lolocompany/bifrost/pkg/config"
-	"github.com/lolocompany/bifrost/pkg/metrics"
 )
 
 func TestBridgeIdentityLabelCountMatchesVec(t *testing.T) {
-	id := metrics.BridgeIdentityFrom(bifrostconfig.Bridge{
+	id := bridge.IdentityFrom(bifrostconfig.Bridge{
 		Name: "b1",
 		From: bifrostconfig.BridgeTarget{
 			Cluster: "src",
@@ -19,7 +19,7 @@ func TestBridgeIdentityLabelCountMatchesVec(t *testing.T) {
 			Topic:   "t.out",
 		},
 	})
-	if len(metrics.BridgeLabelNames) != len(id.LabelValues()) {
-		t.Fatalf("BridgeLabelNames has %d names but LabelValues() has %d values", len(metrics.BridgeLabelNames), len(id.LabelValues()))
+	if len(bridge.LabelNames) != len(id.LabelValues()) {
+		t.Fatalf("LabelNames has %d names but LabelValues() has %d values", len(bridge.LabelNames), len(id.LabelValues()))
 	}
 }

@@ -135,7 +135,7 @@ func benchmarkBridgeRelay(b *testing.B, payloadSize int) {
 	}
 	defer producer.Close()
 
-	id := metrics.BridgeIdentityFrom(bifrostconfig.Bridge{
+	id := bridge.IdentityFrom(bifrostconfig.Bridge{
 		Name: "bench",
 		From: bifrostconfig.BridgeTarget{Cluster: "bench", Topic: fromTopic},
 		To:   bifrostconfig.BridgeTarget{Cluster: "bench", Topic: toTopic},

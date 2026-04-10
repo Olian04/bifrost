@@ -27,8 +27,8 @@ func TestSetup_JSONFieldsPresent(t *testing.T) {
 		FilePath: tmp.Name(),
 		ExtraFields: map[string]string{
 			"schema_version": "1.0",
-			"service":     "bifrost",
-			"env":         "test",
+			"service":        "bifrost",
+			"env":            "test",
 		},
 	})
 	if err != nil {
@@ -83,7 +83,7 @@ func TestSetup_LogfmtKeepsExtraFields(t *testing.T) {
 		FilePath: tmp.Name(),
 		ExtraFields: map[string]string{
 			"schema_version": "1.0",
-			"service":     "bifrost",
+			"service":        "bifrost",
 		},
 	})
 	if err != nil {
@@ -108,4 +108,3 @@ func TestSetup_LogfmtKeepsExtraFields(t *testing.T) {
 		}
 	}
 }
-

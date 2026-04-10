@@ -3,10 +3,11 @@ package metrics_test
 import (
 	"testing"
 
+	"github.com/lolocompany/bifrost/pkg/bridge"
 	bifrostconfig "github.com/lolocompany/bifrost/pkg/config"
 	"github.com/lolocompany/bifrost/pkg/metrics"
-	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 func TestMetricsExtraLabelsApplied(t *testing.T) {
@@ -36,8 +37,8 @@ func TestMetricsExtraLabelsApplied(t *testing.T) {
 	}
 
 	// Touch a metric from each family so at least one sample exists.
-	id := metrics.BridgeIdentityFrom(bridges[0])
-	m.AddForwarded(id)
+	id := bridge.IdentityFrom(bridges[0])
+	m.IncMessages(id)
 	if h := bp.HookFor("a"); h == nil {
 		t.Fatal("expected kafka/tls hook")
 	}

@@ -85,7 +85,7 @@ func runBridgeRelayTest(t *testing.T, brokers []string) {
 	}
 	defer producer.Close()
 
-	id := metrics.BridgeIdentityFrom(bifrostconfig.Bridge{
+	id := bridge.IdentityFrom(bifrostconfig.Bridge{
 		Name: "itest",
 		From: bifrostconfig.BridgeTarget{Cluster: "it", Topic: fromTopic},
 		To:   bifrostconfig.BridgeTarget{Cluster: "it", Topic: toTopic},

@@ -9,13 +9,18 @@ import (
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
-
-	"github.com/lolocompany/bifrost/pkg/metrics"
 )
+
+// MetricsReporter is the callback surface used by Run to record bridge metrics (implemented by metrics.BridgeMetrics).
+type MetricsReporter interface {
+	IncMessages(id Identity)
+	IncErrors(id Identity, stage string)
+	ObserveProduceDuration(id Identity, seconds float64)
+}
 
 // Run consumes from the from-side cluster, produces to the to-side cluster, and commits
 // from-side offsets after each successful write on the to side.
-func Run(ctx context.Context, id metrics.BridgeIdentity, consumer, producer *kgo.Client, m *metrics.Metrics) error {
+func Run(ctx context.Context, id Identity, consumer, producer *kgo.Client, m MetricsReporter) error {
 	if consumer == nil || producer == nil {
 		return errors.New("kafka clients must not be nil")
 	}
@@ -31,7 +36,7 @@ func Run(ctx context.Context, id metrics.BridgeIdentity, consumer, producer *kgo
 
 		fetches := consumer.PollFetches(ctx)
 		if err := fetches.Err(); err != nil {
-			m.AddForwardError(id, "poll")
+			m.IncErrors(id, "poll")
 			return fmt.Errorf("poll fetches: %w", err)
 		}
 		if fetches.NumRecords() == 0 {
@@ -41,7 +46,7 @@ func Run(ctx context.Context, id metrics.BridgeIdentity, consumer, producer *kgo
 		for _, r := range fetches.Records() {
 			if r.Topic != id.FromTopic {
 				log.Warn("unexpected topic on fetch", "topic", r.Topic)
-				m.AddForwardError(id, "route")
+				m.IncErrors(id, "route")
 				return fmt.Errorf("unexpected topic %q (want %q)", r.Topic, id.FromTopic)
 			}
 
@@ -56,16 +61,16 @@ func Run(ctx context.Context, id metrics.BridgeIdentity, consumer, producer *kgo
 			start := time.Now()
 			res := producer.ProduceSync(ctx, out)
 			if err := res.FirstErr(); err != nil {
-				m.AddForwardError(id, "produce")
+				m.IncErrors(id, "produce")
 				return fmt.Errorf("produce to %q: %w", id.ToTopic, err)
 			}
-			m.ObserveForwardLatency(id, time.Since(start).Seconds())
+			m.ObserveProduceDuration(id, time.Since(start).Seconds())
 
 			if err := consumer.CommitRecords(ctx, r); err != nil {
-				m.AddForwardError(id, "commit")
+				m.IncErrors(id, "commit")
 				return fmt.Errorf("commit from-side offsets: %w", err)
 			}
-			m.AddForwarded(id)
+			m.IncMessages(id)
 		}
 	}
 }

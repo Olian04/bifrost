@@ -1,0 +1,41 @@
+---
+description: Compile-time assertions that a concrete type satisfies an interface (Go)
+globs: '**/*.go'
+alwaysApply: false
+---
+
+# Go: compile-time interface satisfaction
+
+When a **concrete type must implement an interface** (especially one defined in another package, e.g. a consumer’s `MetricsReporter`), add a **package-level assignment to the blank identifier** so the compiler verifies the implementation. If methods are added, renamed, or signatures drift, the build breaks immediately instead of failing at runtime or only in distant tests.
+
+## Pattern
+
+**Pointer receiver** (typical for structs with mutable state or consistency with other methods):
+
+Use `(*T)(nil)` so no instance is allocated; the assignment is compile-time only.
+
+```go
+// ASSERT: BridgeMetrics implements bridge.MetricsReporter
+var _ bridge.MetricsReporter = (*BridgeMetrics)(nil)
+```
+
+**Value receiver** (only if the type implements the interface with value receivers):
+
+```go
+// ASSERT: MyReader implements io.Reader
+var _ io.Reader = MyReader{}
+```
+
+## Where to put it
+
+- Immediately **above** the concrete type, or directly **below** the type block, in the **implementing** package.
+- Prefer a one-line comment such as `// ASSERT: <Type> implements <pkg.Interface>` so intent is obvious in review and search.
+
+## When to add or skip
+
+- **Add** when the interface is part of a public contract (dependency injection, plugin, or cross-package API) and missing a method would otherwise surface late.
+- **Optional** for very small, same-package interfaces that are already enforced by every call site; still useful if the interface is expected to grow.
+
+## Related conventions in this repo
+
+- Interfaces are often defined **where they are used**; implementations live elsewhere—this assertion is the cheap link that keeps them aligned.

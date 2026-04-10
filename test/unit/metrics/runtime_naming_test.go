@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lolocompany/bifrost/pkg/bridge"
 	bifrostconfig "github.com/lolocompany/bifrost/pkg/config"
 	"github.com/lolocompany/bifrost/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -52,7 +53,7 @@ func TestRegisteredMetricNamesUseRelaySubsystem(t *testing.T) {
 	if err != nil {
 		t.Fatalf("metrics.New: %v", err)
 	}
-	m.AddForwarded(metrics.BridgeIdentityFrom(bridges[0]))
+	m.IncMessages(bridge.IdentityFrom(bridges[0]))
 
 	fams, err := reg.Gather()
 	if err != nil {

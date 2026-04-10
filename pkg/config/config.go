@@ -124,9 +124,9 @@ type BridgeTarget struct {
 
 // Metrics configures the Prometheus scrape endpoint and which series to expose.
 type Metrics struct {
-	Enable     *bool        `yaml:"enabled"`     // default true when omitted
-	ListenAddr string       `yaml:"listen_addr"` // default :9090 when metrics are enabled and omitted/blank
-	Groups     MetricGroups `yaml:"groups"`
+	Enable      *bool             `yaml:"enabled"`     // default true when omitted
+	ListenAddr  string            `yaml:"listen_addr"` // default :9090 when metrics are enabled and omitted/blank
+	Groups      MetricGroups      `yaml:"groups"`
 	ExtraLabels map[string]string `yaml:"extra_labels"` // added to all bifrost metrics as constant labels
 }
 

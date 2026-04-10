@@ -33,4 +33,6 @@ go.work.sum
 
 # Worktrees
 .worktrees/
+
+# OS X
 .DS_Store

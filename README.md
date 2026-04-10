@@ -1,6 +1,6 @@
 # bifrost
 
-Banner logo that says "Bifrost: Kafka Cluster Bridge" with a rainbow bridging the gap between two clusters
+![Banner logo that says "Bifrost: Kafka Cluster Bridge" with a rainbow bridging the gap between two clusters](./assets/banner_logo.jpg)
 
 **bifrost** is a configurable Kafka replication service for moving records between topics and clusters using declarative YAML configurations. It is designed for teams that need a lightweight, operationally simple way to build reliable cross-cluster relay pipelines without writing custom consumer/producer code for every path.
 

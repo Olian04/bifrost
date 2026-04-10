@@ -7,7 +7,9 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/bifrost ./cmd/bifrost
+# Injected by CI (e.g. release workflow); local builds default to "unknown" (see cmd/bifrost/version.go).
+ARG VERSION=unknown
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.Version=${VERSION}" -o /out/bifrost ./cmd/bifrost
 
 FROM alpine:3.22
 

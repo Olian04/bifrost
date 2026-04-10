@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -26,14 +25,23 @@ import (
 )
 
 func main() {
+	defaultLogCleanup, err := logging.SetupDefaults()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "logging: %v\n", err)
+		os.Exit(1)
+	}
+	defer defaultLogCleanup()
+
 	root := &cli.Command{
-		Name:  "bifrost",
-		Usage: "Relay messages between Kafka clusters",
+		Name:    "bifrost",
+		Usage:   "Relay messages between Kafka clusters",
+		Version: getVersion(),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "path to YAML config file",
+				Sources: cli.EnvVars("BIFROST_CONFIG"),
 				Value:   "bifrost.yaml",
 			},
 		},
@@ -44,7 +52,8 @@ func main() {
 	defer stop()
 
 	if err := root.Run(ctx, os.Args); err != nil {
-		log.Fatal(err)
+		slog.Error("bifrost exited with error", "error_message", err)
+		os.Exit(1)
 	}
 }
 

@@ -11,6 +11,18 @@ import (
 	"github.com/lolocompany/bifrost/pkg/config"
 )
 
+// SetupDefaults configures slog with the same defaults as config.applyDefaults for the logging
+// section (info level, JSON to stdout). Use before loading a config file so startup errors use
+// the same handler shape as a minimal valid config; call Setup(cfg.Logging) after Load to apply
+// the file’s logging settings.
+func SetupDefaults() (func(), error) {
+	return Setup(config.Logging{
+		Level:  "info",
+		Format: "json",
+		Stream: "stdout",
+	})
+}
+
 // Setup configures slog from cfg and returns a cleanup function (e.g. close log file).
 func Setup(cfg config.Logging) (func(), error) {
 	level, err := parseLevel(cfg.LevelKey())

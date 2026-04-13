@@ -41,6 +41,27 @@ func Run(ctx context.Context, cfg *config.Config) error {
 		return fmt.Errorf("metrics: %w", err)
 	}
 
+	startupAttrs := []any{
+		"bridge_count", len(cfg.Bridges),
+		"periodic_stats_interval", periodicStatsInterval.String(),
+		"metrics_enabled", cfg.Metrics.MetricsEnabled(),
+	}
+	if cfg.Metrics.MetricsEnabled() {
+		startupAttrs = append(startupAttrs, "metrics_listen_addr", cfg.Metrics.ListenAddr)
+	}
+	slog.Debug("run startup", startupAttrs...)
+
+	for _, br := range cfg.Bridges {
+		slog.Debug("bridge wiring",
+			"bridge", br.Name,
+			"consumer_group", br.EffectiveConsumerGroup(),
+			"from_cluster", br.From.Cluster,
+			"from_topic", br.From.Topic,
+			"to_cluster", br.To.Cluster,
+			"to_topic", br.To.Topic,
+		)
+	}
+
 	if cfg.Metrics.MetricsEnabled() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", metrics.Handler(reg))
@@ -92,6 +113,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 		if err != nil {
 			return fmt.Errorf("producer %q: %w", clusterName, err)
 		}
+		logKafkaClientDebug(clusterName, "producer", &toCluster)
 		pingCtx, cancelPing, err := bifrostkafka.WithPingTimeout(ctx, &toCluster)
 		if err != nil {
 			p.Close()
@@ -103,6 +125,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 			return fmt.Errorf("producer %q: broker unreachable: %w", clusterName, err)
 		}
 		cancelPing()
+		slog.Debug("kafka cluster reachable", "cluster", clusterName, "client_role", "producer")
 		producerClients[clusterName] = p
 	}
 
@@ -129,6 +152,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 				return fmt.Errorf("bridge %q consumer: %w", br.Name, err)
 			}
 			defer consumer.Close()
+			logKafkaClientDebug(br.From.Cluster, "consumer", &fromCluster)
 
 			pingCtx, cancelPing, err := bifrostkafka.WithPingTimeout(gctx, &fromCluster)
 			if err != nil {
@@ -139,6 +163,7 @@ func Run(ctx context.Context, cfg *config.Config) error {
 				return fmt.Errorf("bridge %q from cluster %q: broker unreachable: %w", br.Name, br.From.Cluster, err)
 			}
 			cancelPing()
+			slog.Debug("kafka cluster reachable", "cluster", br.From.Cluster, "bridge", br.Name, "client_role", "consumer")
 
 			producer := producerClients[br.To.Cluster]
 			slog.Info("bridge starting",
@@ -184,6 +209,7 @@ func ensureTopicsForCluster(
 		if err != nil {
 			return fmt.Errorf("cluster %q auto_create_topics: %w", clusterName, err)
 		}
+		logKafkaClientDebug(clusterName, "producer", &clusterCfg)
 		pingCtx, cancelPing, err := bifrostkafka.WithPingTimeout(ctx, &clusterCfg)
 		if err != nil {
 			tmp.Close()

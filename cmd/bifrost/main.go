@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/lolocompany/bifrost/internal/run"
@@ -64,6 +65,8 @@ func runCLI(ctx context.Context, c *cli.Command) error {
 		return fmt.Errorf("logging: %w", err)
 	}
 	defer logCleanup()
+
+	slog.Info("config loaded", "config_path", filepath.Clean(path))
 
 	return run.Run(ctx, cfg)
 }

@@ -29,8 +29,9 @@ func newTCPBrokerMetrics(labelCluster []string) *tcpBrokerMetrics {
 	)
 	t.connectDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "bifrost_tcp_connect_duration_seconds",
-			Help:    "TCP connect duration to brokers in seconds (successful connects only).",
+			Name: "bifrost_tcp_connect_duration_seconds",
+			Help: "Wall-clock seconds for the TCP dial to each broker (socket established). " +
+				"TLS handshake and SASL are not included. Observed on successful TCP dials before TLS.",
 			Buckets: prometheus.DefBuckets,
 		},
 		labelCluster,

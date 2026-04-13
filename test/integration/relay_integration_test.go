@@ -74,13 +74,13 @@ func runBridgeRelayTest(t *testing.T, brokers []string) {
 		t.Fatalf("metrics: %v", err)
 	}
 
-	consumer, err := kafka.NewConsumerForBridge(env, "itest-cg-"+suffix, fromTopic, nil)
+	consumer, err := kafka.NewConsumerForBridge(env, "itest-cg-"+suffix, fromTopic, nil, nil)
 	if err != nil {
 		t.Fatalf("consumer: %v", err)
 	}
 	defer consumer.Close()
 
-	producer, err := kafka.NewProducer(env, nil)
+	producer, err := kafka.NewProducer(env, nil, nil)
 	if err != nil {
 		t.Fatalf("producer: %v", err)
 	}

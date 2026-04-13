@@ -11,20 +11,35 @@ import (
 	"github.com/lolocompany/bifrost/pkg/config"
 )
 
+// SetupOption configures logging.Setup (functional options).
+type SetupOption func(*setupConfig)
+
+type setupConfig struct {
+	softwareVersion string
+}
+
+// WithSoftwareVersion adds a software_version attribute to every log record (JSON key
+// "software_version"). Callers should pass the application release or build version string.
+func WithSoftwareVersion(v string) SetupOption {
+	return func(c *setupConfig) {
+		c.softwareVersion = v
+	}
+}
+
 // SetupDefaults configures slog with the same defaults as config.applyDefaults for the logging
 // section (info level, JSON to stdout). Use before loading a config file so startup errors use
 // the same handler shape as a minimal valid config; call Setup(cfg.Logging) after Load to apply
 // the file’s logging settings.
-func SetupDefaults() (func(), error) {
+func SetupDefaults(opts ...SetupOption) (func(), error) {
 	return Setup(config.Logging{
 		Level:  "info",
 		Format: "json",
 		Stream: "stdout",
-	})
+	}, opts...)
 }
 
 // Setup configures slog from cfg and returns a cleanup function (e.g. close log file).
-func Setup(cfg config.Logging) (func(), error) {
+func Setup(cfg config.Logging, setupOpts ...SetupOption) (func(), error) {
 	level, err := parseLevel(cfg.LevelKey())
 	if err != nil {
 		return nil, err
@@ -38,7 +53,7 @@ func Setup(cfg config.Logging) (func(), error) {
 	case "stderr":
 		w = os.Stderr
 	case "file":
-		f, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		f, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("open log file: %w", err)
 		}
@@ -48,18 +63,22 @@ func Setup(cfg config.Logging) (func(), error) {
 		return nil, fmt.Errorf("unsupported log stream %q", cfg.Stream)
 	}
 
-	opts := &slog.HandlerOptions{Level: level}
+	handlerOpts := &slog.HandlerOptions{Level: level}
 	var h slog.Handler
 	switch cfg.FormatKey() {
 	case "json":
-		h = slog.NewJSONHandler(w, opts)
+		h = slog.NewJSONHandler(w, handlerOpts)
 	case "logfmt":
 		// slog text handler emits key=value lines (logfmt-style).
-		h = slog.NewTextHandler(w, opts)
+		h = slog.NewTextHandler(w, handlerOpts)
 	default:
 		return nil, fmt.Errorf("unsupported log format %q", cfg.Format)
 	}
-	logger := slog.New(h).With(extraArgs(cfg.ExtraFields)...)
+	o := &setupConfig{softwareVersion: "unknown"}
+	for _, opt := range setupOpts {
+		opt(o)
+	}
+	logger := slog.New(h).With(append([]any{"software_version", o.softwareVersion}, extraArgs(cfg.ExtraFields)...)...)
 	slog.SetDefault(logger)
 	return cleanup, nil
 }

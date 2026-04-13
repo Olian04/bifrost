@@ -48,9 +48,10 @@ func WithPingTimeout(parent context.Context, env *config.Cluster) (context.Conte
 }
 
 // NewConsumerForBridge returns a consumer-group client for one bridge (one from-side topic).
+// recordTCPDialSeconds is passed to [ClientOpts]; use nil unless recording bifrost_tcp_connect_duration_seconds.
 // Optional extra kgo options are applied last (e.g. [kgo.FetchMaxPartitionBytes] for large records).
-func NewConsumerForBridge(env *config.Cluster, group string, topic string, hooks []kgo.Hook, extra ...kgo.Opt) (*kgo.Client, error) {
-	base, err := ClientOpts(env)
+func NewConsumerForBridge(env *config.Cluster, group string, topic string, hooks []kgo.Hook, recordTCPDialSeconds func(float64), extra ...kgo.Opt) (*kgo.Client, error) {
+	base, err := ClientOpts(env, recordTCPDialSeconds)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +77,10 @@ func NewConsumerForBridge(env *config.Cluster, group string, topic string, hooks
 }
 
 // NewProducer returns a producer client for a cluster (shared across bridges that share the same to-side cluster).
+// recordTCPDialSeconds is passed to [ClientOpts]; use nil unless recording bifrost_tcp_connect_duration_seconds.
 // Optional extra kgo options are applied last (e.g. [kgo.ProducerBatchMaxBytes] for large records).
-func NewProducer(env *config.Cluster, hooks []kgo.Hook, extra ...kgo.Opt) (*kgo.Client, error) {
-	base, err := ClientOpts(env)
+func NewProducer(env *config.Cluster, hooks []kgo.Hook, recordTCPDialSeconds func(float64), extra ...kgo.Opt) (*kgo.Client, error) {
+	base, err := ClientOpts(env, recordTCPDialSeconds)
 	if err != nil {
 		return nil, err
 	}

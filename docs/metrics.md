@@ -72,7 +72,7 @@ Additional labels may appear when `metrics.extra_labels` is configured; those ar
 | :-- | :-- | :-- | :-- |
 | `bifrost_tcp_connect_attempts_total` | `Counter` | `cluster` | Number of TCP dial attempts to brokers. |
 | `bifrost_tcp_connect_errors_total` | `Counter` | `cluster` | Number of TCP dial errors to brokers. |
-| `bifrost_tcp_connect_duration_seconds` | `Histogram` | `cluster` | Histogram of successful TCP connect durations. |
+| `bifrost_tcp_connect_duration_seconds` | `Histogram` | `cluster` | Histogram of TCP dial duration only (until the TCP socket is established). TLS handshake and SASL happen after this and are not included. |
 | `bifrost_tcp_disconnects_total` | `Counter` | `cluster` | Number of broker TCP disconnect events. |
 | `bifrost_tcp_active_connections` | `Gauge` | `cluster` | Current number of active broker TCP connections. |
 

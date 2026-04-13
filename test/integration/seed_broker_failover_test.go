@@ -39,7 +39,7 @@ func TestClusterBrokerFailover_SecondSeedReachable(t *testing.T) {
 		Client:  bifrostconfig.ClientSettings{DialTimeout: "15s"},
 	}
 
-	producer, err := kafka.NewProducer(env, nil)
+	producer, err := kafka.NewProducer(env, nil, nil)
 	if err != nil {
 		t.Fatalf("NewProducer: %v", err)
 	}

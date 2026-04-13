@@ -68,6 +68,25 @@ func (bm *BrokerMetrics) HookFor(cluster string) kgo.Hook {
 	return &franzHook{cluster: cluster, bm: bm}
 }
 
+// RecordTCPConnectDuration records bifrost_tcp_connect_duration_seconds (TCP dial only, before TLS).
+func (bm *BrokerMetrics) RecordTCPConnectDuration(cluster string, seconds float64) {
+	if bm == nil || bm.TCP == nil {
+		return
+	}
+	bm.TCP.connectDuration.WithLabelValues(cluster).Observe(seconds)
+}
+
+// TCPDialRecorder returns a callback for [kafka.ClientOpts] when the TCP metrics group is enabled;
+// otherwise it returns nil so franz-go uses its default dial path.
+func (bm *BrokerMetrics) TCPDialRecorder(cluster string) func(float64) {
+	if bm == nil || bm.TCP == nil {
+		return nil
+	}
+	return func(seconds float64) {
+		bm.RecordTCPConnectDuration(cluster, seconds)
+	}
+}
+
 // franzHook implements kgo broker hooks for Prometheus.
 type franzHook struct {
 	cluster string
@@ -104,7 +123,6 @@ func (f *franzHook) OnBrokerConnect(_ kgo.BrokerMetadata, initDur time.Duration,
 		if err != nil {
 			t.connectErrors.WithLabelValues(cname).Inc()
 		} else {
-			t.connectDuration.WithLabelValues(cname).Observe(initDur.Seconds())
 			f.mu.Lock()
 			if f.conns == nil {
 				f.conns = make(map[net.Conn]struct{})

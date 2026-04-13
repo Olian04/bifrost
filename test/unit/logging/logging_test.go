@@ -30,7 +30,7 @@ func TestSetup_JSONFieldsPresent(t *testing.T) {
 			"service":        "bifrost",
 			"env":            "test",
 		},
-	})
+	}, logging.WithSoftwareVersion("1.2.3-test"))
 	if err != nil {
 		t.Fatalf("Setup: %v", err)
 	}
@@ -52,10 +52,13 @@ func TestSetup_JSONFieldsPresent(t *testing.T) {
 		t.Fatalf("Unmarshal: %v", err)
 	}
 
-	for _, key := range []string{"schema_version", "time", "level", "msg"} {
+	for _, key := range []string{"software_version", "schema_version", "time", "level", "msg"} {
 		if _, ok := m[key]; !ok {
 			t.Fatalf("missing expected JSON field %q", key)
 		}
+	}
+	if got, _ := m["software_version"].(string); got != "1.2.3-test" {
+		t.Fatalf("software_version: got %q want %q", got, "1.2.3-test")
 	}
 	if got, _ := m["schema_version"].(string); got != "1.0" {
 		t.Fatalf("schema_version: got %q want %q", got, "1.0")
@@ -85,7 +88,7 @@ func TestSetup_LogfmtKeepsExtraFields(t *testing.T) {
 			"schema_version": "1.0",
 			"service":        "bifrost",
 		},
-	})
+	}, logging.WithSoftwareVersion("1.2.3-test"))
 	if err != nil {
 		t.Fatalf("Setup: %v", err)
 	}
@@ -102,7 +105,7 @@ func TestSetup_LogfmtKeepsExtraFields(t *testing.T) {
 	if line == "" {
 		t.Fatal("expected log line")
 	}
-	for _, want := range []string{"schema_version=1.0", "service=bifrost", "msg=\"bridge started\""} {
+	for _, want := range []string{"software_version=1.2.3-test", "schema_version=1.0", "service=bifrost", "msg=\"bridge started\""} {
 		if !strings.Contains(line, want) {
 			t.Fatalf("logfmt line missing %q: %s", want, line)
 		}

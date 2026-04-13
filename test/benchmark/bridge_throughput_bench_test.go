@@ -139,7 +139,7 @@ func benchmarkKafkaRoundTrip(b *testing.B, payloadSize int) {
 		b.Fatalf("bootstrap topic: %v", res.FirstErr())
 	}
 
-	base, err := kafka.ClientOpts(&env)
+	base, err := kafka.ClientOpts(&env, nil)
 	if err != nil {
 		b.Fatalf("verify base opts: %v", err)
 	}
@@ -234,13 +234,13 @@ func benchmarkBridgeRelayWithBurst(b *testing.B, payloadSize int, burst int) {
 		b.Fatalf("metrics: %v", err)
 	}
 
-	consumer, err := kafka.NewConsumerForBridge(&env, "bench-cg-"+suffix, fromTopic, nil)
+	consumer, err := kafka.NewConsumerForBridge(&env, "bench-cg-"+suffix, fromTopic, nil, nil)
 	if err != nil {
 		b.Fatalf("consumer: %v", err)
 	}
 	defer consumer.Close()
 
-	producer, err := kafka.NewProducer(&env, nil)
+	producer, err := kafka.NewProducer(&env, nil, nil)
 	if err != nil {
 		b.Fatalf("producer: %v", err)
 	}
@@ -252,7 +252,7 @@ func benchmarkBridgeRelayWithBurst(b *testing.B, payloadSize int, burst int) {
 		To:   bifrostconfig.BridgeTarget{Cluster: "bench", Topic: toTopic},
 	})
 
-	base, err := kafka.ClientOpts(&env)
+	base, err := kafka.ClientOpts(&env, nil)
 	if err != nil {
 		b.Fatalf("verify base opts: %v", err)
 	}

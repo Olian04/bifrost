@@ -9,7 +9,7 @@ help:
 	@echo "Targets:"
 	@printf '  %-30s %s\n' 'build' 'Build bifrost (./cmd/bifrost)'
 	@printf '  %-30s %s\n' 'build-docker' 'Build Docker image (bifrost:latest)'
-	@printf '  %-30s %s\n' 'lint' 'go vet + golangci-lint'
+	@printf '  %-30s %s\n' 'lint' 'go vet, go mod verify, govulncheck/gosec (go tool), golangci-lint'
 	@printf '  %-30s %s\n' 'format' 'go fmt + gofmt -w'
 	@printf '  %-30s %s\n' 'test' 'Unit tests (./test/unit/...)'
 	@printf '  %-30s %s\n' 'test-integration' 'Integration tests (BIFROST_INTEGRATION=1; ./test/integration/...)'
@@ -26,14 +26,21 @@ help:
 
 lint:
 	go vet ./...
+	go mod verify
+	go tool govulncheck ./...
+	go tool gosec -fmt text -stdout -quiet ./...
 	golangci-lint run ./...
 
 format:
 	go fmt ./...
 	gofmt -w .
 
+# Optional local revision/time for pkg/version (matches CI-style ldflags).
+REV := $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
+BUILD_TIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
 build:
-	go build -o bifrost ./cmd/bifrost
+	go build -trimpath -ldflags "-s -w -X github.com/lolocompany/bifrost/pkg/version.Revision=$(REV) -X github.com/lolocompany/bifrost/pkg/version.BuildTime=$(BUILD_TIME)" -o bifrost ./cmd/bifrost
 
 build-docker:
 	docker build -t bifrost .

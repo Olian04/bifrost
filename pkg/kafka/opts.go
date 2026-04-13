@@ -1,10 +1,12 @@
 package kafka
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -17,9 +19,17 @@ import (
 	"github.com/lolocompany/bifrost/pkg/config"
 )
 
+// defaultDialTimeout matches franz-go's default when client.dial_timeout is omitted.
+const defaultDialTimeout = 10 * time.Second
+
 // ClientOpts returns franz-go options shared by producer and consumer clients for a cluster
 // (brokers, TLS, SASL, and cluster.client).
-func ClientOpts(env *config.Cluster) ([]kgo.Opt, error) {
+//
+// If recordTCPDialSeconds is non-nil, a custom [kgo.Dialer] is installed that measures TCP-only
+// connect time (until the TCP socket is established) and calls recordTCPDialSeconds with that
+// duration in seconds before the TLS handshake. This matches bifrost_tcp_connect_duration_seconds.
+// Pass nil to use franz-go's default dial path (no TCP-only timing callback).
+func ClientOpts(env *config.Cluster, recordTCPDialSeconds func(float64)) ([]kgo.Opt, error) {
 	if env == nil {
 		return nil, errors.New("cluster is nil")
 	}
@@ -30,7 +40,19 @@ func ClientOpts(env *config.Cluster) ([]kgo.Opt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if tlsCfg != nil {
+
+	dialTimeout := defaultDialTimeout
+	if d, ok, err := parseDurationField(env.Client.DialTimeout); err != nil {
+		return nil, fmt.Errorf("client.dial_timeout: %w", err)
+	} else if ok {
+		dialTimeout = d
+	}
+
+	if recordTCPDialSeconds != nil {
+		opts = append(opts, kgo.Dialer(func(ctx context.Context, network, host string) (net.Conn, error) {
+			return dialBrokerConn(ctx, network, host, tlsCfg, dialTimeout, recordTCPDialSeconds)
+		}))
+	} else if tlsCfg != nil {
 		opts = append(opts, kgo.DialTLSConfig(tlsCfg))
 	}
 
@@ -46,10 +68,12 @@ func ClientOpts(env *config.Cluster) ([]kgo.Opt, error) {
 	if id := strings.TrimSpace(cl.ClientID); id != "" {
 		opts = append(opts, kgo.ClientID(id))
 	}
-	if d, ok, err := parseDurationField(cl.DialTimeout); err != nil {
-		return nil, fmt.Errorf("client.dial_timeout: %w", err)
-	} else if ok {
-		opts = append(opts, kgo.DialTimeout(d))
+	if recordTCPDialSeconds == nil {
+		if d, ok, err := parseDurationField(cl.DialTimeout); err != nil {
+			return nil, fmt.Errorf("client.dial_timeout: %w", err)
+		} else if ok {
+			opts = append(opts, kgo.DialTimeout(d))
+		}
 	}
 	if d, ok, err := parseDurationField(cl.RequestTimeoutOverhead); err != nil {
 		return nil, fmt.Errorf("client.request_timeout_overhead: %w", err)
@@ -64,6 +88,37 @@ func ClientOpts(env *config.Cluster) ([]kgo.Opt, error) {
 	}
 
 	return opts, nil
+}
+
+// dialBrokerConn dials the broker address: plain TCP, then optional TLS (same order as franz-go's
+// built-in DialTLSConfig path). recordTCPDialSeconds is called with the TCP dial duration in seconds
+// only after the TCP connection succeeds (before TLS handshake).
+func dialBrokerConn(ctx context.Context, network, host string, tlsCfg *tls.Config, dialTimeout time.Duration, recordTCPDialSeconds func(float64)) (net.Conn, error) {
+	nd := net.Dialer{Timeout: dialTimeout}
+	start := time.Now()
+	raw, err := nd.DialContext(ctx, network, host)
+	if err != nil {
+		return nil, err
+	}
+	recordTCPDialSeconds(time.Since(start).Seconds())
+	if tlsCfg != nil {
+		cfg := tlsCfg.Clone()
+		if cfg.ServerName == "" {
+			server, _, err := net.SplitHostPort(host)
+			if err != nil {
+				raw.Close()
+				return nil, fmt.Errorf("unable to split host:port for dialing: %w", err)
+			}
+			cfg.ServerName = server
+		}
+		tlsConn := tls.Client(raw, cfg)
+		if err := tlsConn.HandshakeContext(ctx); err != nil {
+			raw.Close()
+			return nil, err
+		}
+		return tlsConn, nil
+	}
+	return raw, nil
 }
 
 func parseDurationField(s string) (d time.Duration, set bool, err error) {
@@ -172,7 +227,7 @@ func FullClusterOpts(env *config.Cluster) ([]kgo.Opt, error) {
 	if env == nil {
 		return nil, errors.New("cluster is nil")
 	}
-	b, err := ClientOpts(env)
+	b, err := ClientOpts(env, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -225,8 +280,7 @@ func tlsConfigFrom(t *config.TLS) (*tls.Config, error) {
 		return nil, nil
 	}
 	cfg := &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: t.InsecureSkipVerify,
+		MinVersion: tls.VersionTLS12,
 	}
 	if t.CAFile != "" {
 		ca, err := os.ReadFile(t.CAFile)

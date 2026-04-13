@@ -127,7 +127,7 @@ Contributor and agent-oriented notes on layout and naming: [`docs/AGENTS.md`](./
 
 ## Downstream deduplication (source headers)
 
-Every relayed record includes **source coordinate** headers so consumers can treat deliveries as **at-least-once** and still process each logical message once. The bridge always sets these; they appear **before** any headers copied from the source record.
+Every relayed record includes **source coordinate** headers so consumers can treat deliveries as **at-least-once** and still process each logical message once. The bridge always sets these; optional per-bridge **`extra_headers`** in YAML are added next, then any headers copied from the source record. Extra header keys must not use the **`bifrost.*`** prefix (reserved for the relay).
 
 | Header                     | Value                                                    |
 | -------------------------- | -------------------------------------------------------- |

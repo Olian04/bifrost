@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 )
 
-// LDFLAGS: set via -X github.com/lolocompany/bifrost/pkg/version.<Var>=<value> at link time.
+// LDFLAGS: set via -X github.com/lolocompany/bifrost/cmd/bifrost/version.<Var>=<value> at link time.
 var (
 	Version   = "unknown"
 	Revision  = "unknown"

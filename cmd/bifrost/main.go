@@ -13,7 +13,7 @@ import (
 	"github.com/lolocompany/bifrost/pkg/bifrost"
 	"github.com/lolocompany/bifrost/pkg/config"
 	"github.com/lolocompany/bifrost/pkg/logging"
-	"github.com/lolocompany/bifrost/pkg/version"
+	"github.com/lolocompany/bifrost/cmd/bifrost/version"
 	"github.com/urfave/cli/v3"
 )
 

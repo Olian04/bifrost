@@ -35,12 +35,12 @@ format:
 	go fmt ./...
 	gofmt -w .
 
-# Optional local revision/time for pkg/version (matches CI-style ldflags).
+# Optional local revision/time for cmd/bifrost/version (matches CI-style ldflags).
 REV := $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
 BUILD_TIME := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 build:
-	go build -trimpath -ldflags "-s -w -X github.com/lolocompany/bifrost/pkg/version.Revision=$(REV) -X github.com/lolocompany/bifrost/pkg/version.BuildTime=$(BUILD_TIME)" -o bifrost ./cmd/bifrost
+	go build -trimpath -ldflags "-s -w -X github.com/lolocompany/bifrost/cmd/bifrost/version.Revision=$(REV) -X github.com/lolocompany/bifrost/cmd/bifrost/version.BuildTime=$(BUILD_TIME)" -o bifrost ./cmd/bifrost
 
 build-docker:
 	docker build -t bifrost .

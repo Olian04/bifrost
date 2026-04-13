@@ -9,10 +9,11 @@ import (
 
 // Bridge defines one directional relay between two clusters and topics (from → to).
 type Bridge struct {
-	Name          string       `yaml:"name"`
-	From          BridgeTarget `yaml:"from"`
-	To            BridgeTarget `yaml:"to"`
-	ConsumerGroup string       `yaml:"consumer_group"`
+	Name          string            `yaml:"name"`
+	From          BridgeTarget      `yaml:"from"`
+	To            BridgeTarget      `yaml:"to"`
+	ConsumerGroup string            `yaml:"consumer_group"`
+	ExtraHeaders  map[string]string `yaml:"extra_headers,omitempty"`
 }
 
 // BridgeTarget references a cluster name (key in clusters) and a single topic.
@@ -33,6 +34,28 @@ func (b *Bridge) validate(clusters map[string]Cluster) error {
 	}
 	if b.From.Cluster == b.To.Cluster && b.From.Topic == b.To.Topic {
 		return errors.New("from and to cannot be the same cluster and topic")
+	}
+	if err := validateExtraHeaders(b.ExtraHeaders); err != nil {
+		return err
+	}
+	return nil
+}
+
+// bifrostHeaderPrefix is reserved for headers set by bifrost (e.g. bifrost.source.*).
+const bifrostHeaderPrefix = "bifrost."
+
+func validateExtraHeaders(m map[string]string) error {
+	if len(m) == 0 {
+		return nil
+	}
+	for k := range m {
+		key := strings.TrimSpace(k)
+		if key == "" {
+			return fmt.Errorf("extra_headers: empty key")
+		}
+		if strings.HasPrefix(key, bifrostHeaderPrefix) {
+			return fmt.Errorf("extra_headers: key %q must not use the %q prefix (reserved for bifrost)", key, bifrostHeaderPrefix)
+		}
 	}
 	return nil
 }

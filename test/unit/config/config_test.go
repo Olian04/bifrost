@@ -879,3 +879,123 @@ logging:
 		t.Fatalf("normalized producer jitter: got %q", cfg.Clusters["east"].Producer.Retry.Jitter)
 	}
 }
+
+func TestParse_bridgeExtraHeaders(t *testing.T) {
+	const yamlDoc = `
+clusters:
+  east:
+    brokers: ["127.0.0.1:9092"]
+  west:
+    brokers: ["127.0.0.1:9093"]
+bridges:
+  - name: east-to-west
+    from:
+      cluster: east
+      topic: incoming
+    to:
+      cluster: west
+      topic: outgoing
+    extra_headers:
+      env: prod
+      trace: "x"
+metrics:
+  enabled: false
+logging:
+  level: info
+  stream: stdout
+`
+	cfg, err := config.Parse([]byte(yamlDoc))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if cfg.Bridges[0].ExtraHeaders["env"] != "prod" || cfg.Bridges[0].ExtraHeaders["trace"] != "x" {
+		t.Fatalf("extra_headers: %+v", cfg.Bridges[0].ExtraHeaders)
+	}
+}
+
+func TestParse_bridgeExtraHeadersRejectsReservedKey(t *testing.T) {
+	const yamlDoc = `
+clusters:
+  east:
+    brokers: ["127.0.0.1:9092"]
+  west:
+    brokers: ["127.0.0.1:9093"]
+bridges:
+  - name: east-to-west
+    from:
+      cluster: east
+      topic: incoming
+    to:
+      cluster: west
+      topic: outgoing
+    extra_headers:
+      bifrost.source.cluster: "nope"
+metrics:
+  enabled: false
+logging:
+  level: info
+  stream: stdout
+`
+	_, err := config.Parse([]byte(yamlDoc))
+	if err == nil {
+		t.Fatal("expected error for reserved extra_headers key")
+	}
+}
+
+func TestParse_bridgeExtraHeadersRejectsBifrostPrefix(t *testing.T) {
+	const yamlDoc = `
+clusters:
+  east:
+    brokers: ["127.0.0.1:9092"]
+  west:
+    brokers: ["127.0.0.1:9093"]
+bridges:
+  - name: east-to-west
+    from:
+      cluster: east
+      topic: incoming
+    to:
+      cluster: west
+      topic: outgoing
+    extra_headers:
+      bifrost.custom: "nope"
+metrics:
+  enabled: false
+logging:
+  level: info
+  stream: stdout
+`
+	_, err := config.Parse([]byte(yamlDoc))
+	if err == nil {
+		t.Fatal("expected error for bifrost.* extra_headers key")
+	}
+}
+
+func TestParse_bridgeExtraHeadersRejectsEmptyKey(t *testing.T) {
+	const yamlDoc = `
+clusters:
+  east:
+    brokers: ["127.0.0.1:9092"]
+  west:
+    brokers: ["127.0.0.1:9093"]
+bridges:
+  - name: east-to-west
+    from:
+      cluster: east
+      topic: incoming
+    to:
+      cluster: west
+      topic: outgoing
+    extra_headers:
+      "": "v"
+metrics:
+  enabled: false
+logging:
+  level: info
+  stream: stdout
+`
+	_, err := config.Parse([]byte(yamlDoc))
+	if err == nil {
+		t.Fatal("expected error for empty extra_headers key")
+	}
+}

@@ -62,6 +62,9 @@ type RunOptions struct {
 	Retry                 RetryPolicy
 	Sleep                 func(context.Context, time.Duration) error
 	Jitter                func(time.Duration) time.Duration
+	// ExtraHeaders are appended to each produced record after bifrost.source.* headers and before
+	// headers copied from the source record.
+	ExtraHeaders []kgo.RecordHeader
 }
 
 var defaultRetryConfig = RetryConfig{
@@ -72,7 +75,8 @@ var defaultRetryConfig = RetryConfig{
 
 // Run consumes from the from-side cluster, produces to the to-side cluster, and commits
 // from-side offsets after each successful write on the to side. Each produced record includes
-// bifrost.source.* headers (see AppendSourceHeaders) before any copied source headers.
+// bifrost.source.* headers (see AppendSourceHeaders), then optional ExtraHeaders from config, then
+// any headers copied from the source record.
 //
 // When PeriodicStatsInterval is greater than zero, Run logs info-level "bridge periodic stats"
 // on that interval with messages_delta and errors_delta since the previous log.
@@ -142,8 +146,9 @@ func RunWithClients(ctx context.Context, id Identity, consumer ConsumerClient, p
 				return fmt.Errorf("unexpected topic %q (want %q)", r.Topic, id.FromTopic)
 			}
 
-			headers := make([]kgo.RecordHeader, 0, len(r.Headers)+4)
+			headers := make([]kgo.RecordHeader, 0, len(r.Headers)+4+len(opts.ExtraHeaders))
 			headers = AppendSourceHeaders(headers, id, r)
+			headers = append(headers, opts.ExtraHeaders...)
 			headers = append(headers, r.Headers...)
 
 			out := &kgo.Record{

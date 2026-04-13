@@ -8,8 +8,8 @@ import (
 
 // Kafka record header keys for the source coordinates of a relayed message. Downstream consumers
 // can treat (cluster, topic, partition, offset) as a stable idempotency key across at-least-once
-// delivery. Values are always set by the bridge; headers are listed first, followed by any headers
-// copied from the source record.
+// delivery. Values are always set by the bridge; headers are listed first, then optional bridge
+// extra_headers from config, then any headers copied from the source record.
 const (
 	HeaderSourceCluster   = "bifrost.source.cluster"
 	HeaderSourceTopic     = "bifrost.source.topic"

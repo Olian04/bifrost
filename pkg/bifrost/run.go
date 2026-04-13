@@ -15,6 +15,7 @@ import (
 )
 
 // Run starts metrics (if enabled), producer clients, optional topic creation, and bridge goroutines.
+// Does not configure logging. Use pkg/logging.Setup before calling Run to set up the default slog logger.
 func Run(ctx context.Context, cfg config.Config) error {
 	periodicStatsInterval, err := cfg.Logging.ParsePeriodicStatsInterval()
 	if err != nil {
@@ -67,6 +68,7 @@ func Run(ctx context.Context, cfg config.Config) error {
 			if err != nil {
 				return fmt.Errorf("bridge %q retry config: %w", bridgeCfg.Name, err)
 			}
+			runOpts.ExtraHeaders = recordHeadersFromExtraHeaders(bridgeCfg.ExtraHeaders)
 
 			consumer, err := newConsumer(ctx, bridgeCfg, fromCluster, reg.BrokerMetrics)
 			if err != nil {

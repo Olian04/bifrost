@@ -210,6 +210,27 @@ func BridgeRunOptions(periodicStatsInterval time.Duration, fromCluster, toCluste
 	}, nil
 }
 
+// recordHeadersFromExtraHeaders builds Kafka headers from bridge extra_headers (sorted by key for stable output).
+func recordHeadersFromExtraHeaders(m map[string]string) []kgo.RecordHeader {
+	if len(m) == 0 {
+		return nil
+	}
+	trimmed := make(map[string]string, len(m))
+	for k, v := range m {
+		trimmed[strings.TrimSpace(k)] = v
+	}
+	keys := make([]string, 0, len(trimmed))
+	for k := range trimmed {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	out := make([]kgo.RecordHeader, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, kgo.RecordHeader{Key: k, Value: []byte(trimmed[k])})
+	}
+	return out
+}
+
 func logKafkaClientDebug(clusterName, clientRole string, env *config.Cluster) {
 	if env == nil {
 		return

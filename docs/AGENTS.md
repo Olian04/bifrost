@@ -8,7 +8,7 @@ This document summarizes what **bifrost** is, how the repository is organized, a
 
 Important product facts (from the README and code):
 
-- **Bridge (config):** One YAML `bridges[]` entry is a **directional** path: `from` (cluster + topic) → `to` (cluster + topic). The type is `config.Bridge`. This is the user-facing word in docs and config.
+- **Bridge (config):** One YAML `bridges[]` entry is a **directional** path: `from` (cluster + topic) → `to` (cluster + topic). The type is `config.Bridge`. Optional `extra_headers` adds string Kafka headers on the to-side record (after `bifrost.source.*`); keys must not use the `bifrost.*` prefix. This is the user-facing word in docs and config.
 - **Relay (behavior):** The **pkg/bridge** package implements the **relay loop** (`bridge.Run`): consume → produce → commit, with retries and `bifrost.source.*` headers for downstream deduplication. README and metrics often say **relay** (`bifrost_relay_*`).
 - **Clusters:** Named broker profiles under `clusters:`; consumer settings apply on the **from** side, producer settings on the **to** side.
 - **Process:** One OS process can run **many bridges in parallel** (one goroutine per configured bridge, coordinated with `errgroup`).
@@ -26,7 +26,7 @@ Do **not** conflate:
 
 | Path                            | Role                                                                                                                                                                                          |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cmd/bifrost`                   | CLI: flags, load YAML, logging setup, signal context, **`bifrost.Run(ctx, cfg)`**.                                                                                                            |
+| `cmd/bifrost`                   | CLI: flags, load YAML, logging setup, signal context, **`bifrost.Run(ctx, cfg)`**. **`cmd/bifrost/version`** holds release/build metadata and `-X` ldflags targets.                                                                                           |
 | `pkg/bifrost`                   | Process orchestration: **`Run`**, Kafka client construction, topic ensure, `errgroup` over configured bridges.                                                                                |
 | `pkg/bridge`                    | Core relay loop and interfaces (`MetricsReporter`, `RunOptions`, etc.).                                                                                                                       |
 | `pkg/config`                    | Parsed config, validation, defaults.                                                                                                                                                          |

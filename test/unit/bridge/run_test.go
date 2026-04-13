@@ -45,6 +45,45 @@ func TestRunWithClients_retriesAfterPollError(t *testing.T) {
 	}
 }
 
+func TestRunWithClients_includesExtraHeadersAfterSourceHeaders(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithCancel(context.Background())
+	m := &testMetricsReporter{}
+	consumer := &fakeConsumer{
+		polls: []fakeFetches{{
+			records: []*kgo.Record{{
+				Topic:   "from-topic",
+				Value:   []byte("payload"),
+				Headers: []kgo.RecordHeader{{Key: "upstream", Value: []byte("1")}},
+			}},
+		}},
+		commitHook: func() { cancel() },
+	}
+	producer := &fakeProducer{}
+
+	err := bridge.RunWithClients(ctx, testIdentity(), consumer, producer, m, bridge.RunOptions{
+		ExtraHeaders: []kgo.RecordHeader{
+			{Key: "env", Value: []byte("prod")},
+		},
+	})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("RunWithClients error = %v, want context canceled", err)
+	}
+	if producer.lastRecord == nil {
+		t.Fatal("expected produced record")
+	}
+	h := producer.lastRecord.Headers
+	if len(h) != 6 {
+		t.Fatalf("header count = %d, want 6 (4 source + 1 extra + 1 upstream)", len(h))
+	}
+	if string(h[4].Key) != "env" || string(h[4].Value) != "prod" {
+		t.Fatalf("extra header: %+v", h[4])
+	}
+	if string(h[5].Key) != "upstream" {
+		t.Fatalf("upstream header position: %+v", h[5])
+	}
+}
+
 func TestRunWithClients_returnsWrongTopicError(t *testing.T) {
 	t.Parallel()
 	m := &testMetricsReporter{}
@@ -245,10 +284,12 @@ type fakeProducer struct {
 	err          error
 	results      []error
 	produceCalls int
+	lastRecord   *kgo.Record
 }
 
-func (f *fakeProducer) ProduceSync(context.Context, *kgo.Record) bridge.ProduceResult {
+func (f *fakeProducer) ProduceSync(_ context.Context, r *kgo.Record) bridge.ProduceResult {
 	f.produceCalls++
+	f.lastRecord = r
 	if len(f.results) > 0 {
 		next := f.results[0]
 		f.results = f.results[1:]

@@ -106,14 +106,18 @@ func dialBrokerConn(ctx context.Context, network, host string, tlsCfg *tls.Confi
 		if cfg.ServerName == "" {
 			server, _, err := net.SplitHostPort(host)
 			if err != nil {
-				raw.Close()
+				if cerr := raw.Close(); cerr != nil {
+					return nil, fmt.Errorf("unable to split host:port for dialing: %w", errors.Join(err, cerr))
+				}
 				return nil, fmt.Errorf("unable to split host:port for dialing: %w", err)
 			}
 			cfg.ServerName = server
 		}
 		tlsConn := tls.Client(raw, cfg)
 		if err := tlsConn.HandshakeContext(ctx); err != nil {
-			raw.Close()
+			if cerr := raw.Close(); cerr != nil {
+				return nil, fmt.Errorf("tls handshake: %w", errors.Join(err, cerr))
+			}
 			return nil, err
 		}
 		return tlsConn, nil

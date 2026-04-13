@@ -17,8 +17,6 @@ clusters:
     #   cert_file: "/path/to/client.pem"
     #   # Optional: private key for mutual TLS (must be set with cert_file).
     #   key_file: "/path/to/client-key.pem"
-    #   # Optional: skip TLS hostname/cert verification (not recommended in production).
-    #   insecure_skip_verify: false
 
     # Optional SASL block. Omit to use defaults (mechanism=none).
     # sasl:

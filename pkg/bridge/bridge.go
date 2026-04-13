@@ -122,6 +122,8 @@ func RunWithClients(ctx context.Context, id Identity, consumer ConsumerClient, p
 	}
 	defer stopStats()
 
+	lastPollFailed := false
+
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -131,8 +133,15 @@ func RunWithClients(ctx context.Context, id Identity, consumer ConsumerClient, p
 		if err := fetches.Err(); err != nil {
 			m.IncErrors(id, "poll")
 			errorsSeen.Add(1)
-			log.Warn("poll fetches failed; retrying immediately", "stage", "poll", "error_message", err.Error())
+			if !lastPollFailed {
+				log.Info("connection lost; reconnecting in background", "stage", "poll", "error_message", err.Error())
+				lastPollFailed = true
+			}
 			continue
+		}
+		if lastPollFailed {
+			log.Info("connection restored; resuming relay", "stage", "poll")
+			lastPollFailed = false
 		}
 		if fetches.NumRecords() == 0 {
 			continue

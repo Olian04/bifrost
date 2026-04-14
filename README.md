@@ -60,7 +60,7 @@ Replace the image tag with the version you pull from [GitHub Releases](https://g
 
 ### Config example
 
-A full multi-cluster example lives in `[example.config.yaml](./example.config.yaml)`. Minimal shape:
+A full multi-cluster example lives in [`example.config.yaml`](./example.config.yaml). Minimal shape:
 
 ```yaml
 clusters:

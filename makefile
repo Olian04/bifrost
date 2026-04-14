@@ -5,23 +5,19 @@
 help:
 	@echo "Usage: make <target>"
 	@echo "Targets:"
+	@printf '  %-30s %s\n' 'bench' 'Benchmarks (BIFROST_BENCHMARK=1; ./test/benchmark/...)'
+	@printf '  %-30s %s\n' 'bench-profile-block' 'Block profile + pprof -http (override BENCH=...)'
+	@printf '  %-30s %s\n' 'bench-profile-cpu' 'CPU profile + pprof -http (override BENCH=...)'
+	@printf '  %-30s %s\n' 'bench-profile-mem' 'Heap profile + pprof -http (override BENCH=...)'
+	@printf '  %-30s %s\n' 'bench-profile-trace' 'Execution trace + go tool trace (override BENCH=...)'
 	@printf '  %-30s %s\n' 'build' 'Build bifrost (./cmd/bifrost)'
 	@printf '  %-30s %s\n' 'build-docker' 'Build Docker image (bifrost:latest)'
-	@printf '  %-30s %s\n' 'lint' 'go vet, go mod verify, govulncheck/gosec (go tool), golangci-lint'
 	@printf '  %-30s %s\n' 'format' 'go fmt + gofmt -w'
-	@printf '  %-30s %s\n' 'test' 'Unit tests (./test/unit/...)'
-	@printf '  %-30s %s\n' 'test-integration' 'Integration tests (BIFROST_INTEGRATION=1; ./test/integration/...)'
-	@printf '  %-30s %s\n' 'test-coverage' 'All tests, coverage.out + HTML (-coverpkg for pkg/ and cmd/)'
-	@printf '  %-30s %s\n' 'bench' 'Benchmarks (BIFROST_BENCHMARK=1 for Docker bridge; ./test/benchmark/...)'
-	@printf '  %-30s %s\n' 'bench-profile-cpu' 'Record CPU profile for one benchmark (override BENCH=...)'
-	@printf '  %-30s %s\n' 'bench-profile-cpu-inspect' 'Open CPU profile in browser (pprof -http=:5432)'
-	@printf '  %-30s %s\n' 'bench-profile-mem' 'Record heap profile for one benchmark'
-	@printf '  %-30s %s\n' 'bench-profile-mem-inspect' 'Open heap profile in browser (pprof -http=:5432)'
-	@printf '  %-30s %s\n' 'bench-profile-trace' 'Record execution trace for one benchmark'
-	@printf '  %-30s %s\n' 'bench-profile-trace-inspect' 'Open trace (go tool trace)'
-	@printf '  %-30s %s\n' 'bench-profile-block' 'Record block profile (sched/sync contention)'
-	@printf '  %-30s %s\n' 'bench-profile-block-inspect' 'Open block profile in browser (pprof -http=:5432)'
 	@printf '  %-30s %s\n' 'help' 'Show this message'
+	@printf '  %-30s %s\n' 'lint' 'go vet, go mod verify, govulncheck/gosec (go tool), golangci-lint'
+	@printf '  %-30s %s\n' 'test' 'Unit tests (./test/unit/...)'
+	@printf '  %-30s %s\n' 'test-coverage' 'Integration + unit tests; coverage.out + HTML (-coverpkg ./pkg/...; ./test/...)'
+	@printf '  %-30s %s\n' 'test-integration' 'Integration tests (BIFROST_INTEGRATION=1; ./test/integration/...)'
 
 lint:
 	go vet ./...

@@ -23,6 +23,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      actions: write # docker/build-push cache type=gha (read/write Actions cache)
 
     steps:
       - name: Checkout code
@@ -139,6 +140,8 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VERSION=${{ steps.version.outputs.version }}
             REVISION=${{ github.sha }}

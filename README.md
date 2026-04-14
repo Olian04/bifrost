@@ -7,7 +7,7 @@
 **Observability**:
 
 - **Logs:** Structured log lines (JSON or logfmt), written to stdout or stderr with configurable extra fields.
-- **Metrics:** Prometheus endpoint (default `**http://0.0.0.0:9090/metrics`\*\*, configurable with `metrics.listen_addr`) with `bifrost_` application series plus standard `go_*` / `process_*` collector series.
+- **Metrics:** Prometheus scrape path `/metrics`. By default `metrics.listen_addr` is `:9090` (all interfaces) when metrics are enabled; override it in YAML. Scrape, for example, `http://127.0.0.1:9090/metrics`. Series include `bifrost_` application metrics plus standard `go_*` / `process_*` collector series.
 
 **Runtime requirement:** at least one **Kafka-compatible** broker (Apache Kafka, Redpanda, etc.) reachable from the host or container running bifrost.
 
@@ -17,7 +17,7 @@
 
 ### Install or download
 
-**Download prebuilt binaries:** [GitHub Releases](https://github.com/lolocompany/bifrost/releases) — the release workflow publishes cross-compiled `**bifrost`**artifacts for Linux, macOS, and Windows (**amd64** and**arm64\*\*) plus checksums.
+**Download prebuilt binaries:** [GitHub Releases](https://github.com/lolocompany/bifrost/releases) — the release workflow publishes cross-compiled **`bifrost`** binaries for Linux, macOS, and Windows (**amd64** and **arm64**) plus checksums.
 
 **Install with the Go toolchain:**
 
@@ -118,7 +118,7 @@ If you omit these blocks, bifrost uses the same defaults shown above. Commit ret
 | `make test`             | Run unit tests (`./test/unit/...`)                                                 |
 | `make test-integration` | Run Docker-backed integration tests (`BIFROST_INTEGRATION=1`)                      |
 | `make bench`            | Run benchmarks (`./test/benchmark/...`, Docker-backed throughput benches included) |
-| `make lint`             | Run `go vet` and `golangci-lint`                                                   |
+| `make lint`             | Run `go vet`, `go mod verify`, `govulncheck`, `gosec`, and `golangci-lint`         |
 | `make format`           | Run `go fmt` and `gofmt`                                                           |
 
 Contributor and agent-oriented notes on layout and naming: [`docs/AGENTS.md`](./docs/AGENTS.md).

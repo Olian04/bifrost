@@ -27,7 +27,7 @@ RUN apk add --no-cache ca-certificates \
 
 USER bifrost
 
-WORKDIR /app
+WORKDIR /home/bifrost
 
 # Same names as build stage so `docker build --build-arg VERSION=...` applies here too.
 ARG VERSION=unknown

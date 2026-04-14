@@ -43,7 +43,7 @@ build:
 	go build -trimpath -ldflags "-s -w -X github.com/lolocompany/bifrost/cmd/bifrost/version.Revision=$(REV) -X github.com/lolocompany/bifrost/cmd/bifrost/version.BuildTime=$(BUILD_TIME)" -o bifrost ./cmd/bifrost
 
 build-docker:
-	docker build -t bifrost .
+	docker build -t bifrost:local . --build-arg VERSION=local-dev-$(REV) --build-arg REVISION=$(REV) --build-arg BUILD_TIME=$(BUILD_TIME)
 
 test:
 	go test -v ./test/unit/...

@@ -1,6 +1,6 @@
 # bifrost
 
-[Banner logo that says "Bifrost: Kafka Cluster Bridge" with a rainbow bridging the gap between two clusters](./assets/banner_logo.jpg)
+![Banner logo that says "Bifrost: Kafka Cluster Bridge" with a rainbow bridging the gap between two clusters](./assets/banner_logo.jpg)
 
 **bifrost** is a configurable Kafka replication service for moving records between topics and clusters using declarative YAML configurations. It is designed for teams that need a lightweight, operationally simple way to build reliable cross-cluster relay pipelines without writing custom consumer/producer code for every path.
 
@@ -114,14 +114,14 @@ If you omit these blocks, bifrost uses the same defaults shown above. Commit ret
 
 ### Development
 
-| Command                 | Purpose                                                                            |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| `make build`            | Build `./bifrost` from source                                                      |
-| `make test`             | Run unit tests (`./test/unit/...`)                                                 |
-| `make test-integration` | Run Docker-backed integration tests (`BIFROST_INTEGRATION=1`)                      |
+| Command                 | Purpose                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `make build`            | Build `./bifrost` from source                                                                  |
+| `make test`             | Run unit tests (`./test/unit/...`)                                                             |
+| `make test-integration` | Run Docker-backed integration tests (`BIFROST_INTEGRATION=1`)                                  |
 | `make bench`            | Default subset; **one Redpanda container per benchmark** (isolated; slower than shared broker) |
-| `make lint`             | Run `go vet`, `go mod verify`, `govulncheck`, `gosec`, and `golangci-lint`         |
-| `make format`           | Run `go fmt` and `gofmt`                                                           |
+| `make lint`             | Run `go vet`, `go mod verify`, `govulncheck`, `gosec`, and `golangci-lint`                     |
+| `make format`           | Run `go fmt` and `gofmt`                                                                       |
 
 Contributor and agent-oriented notes on layout and naming: `[docs/AGENTS.md](./docs/AGENTS.md)`.
 

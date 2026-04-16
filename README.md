@@ -17,7 +17,7 @@
 
 ### Install or download
 
-**Download prebuilt binaries:** [GitHub Releases](https://github.com/lolocompany/bifrost/releases) — the release workflow publishes cross-compiled `**bifrost`**binaries for Linux, macOS, and Windows (**amd64** and**arm64\*\*) plus checksums.
+**Download prebuilt binaries:** [GitHub Releases](https://github.com/lolocompany/bifrost/releases) — the release workflow publishes cross-compiled `**bifrost`**binaries for Linux, macOS, and Windows (amd64 and arm64)** plus checksums.
 
 **Install with the Go toolchain:**
 

@@ -25,12 +25,12 @@ These are the stable, low-cardinality label keys used by bifrost application met
 | Label key | Groups | Meaning |
 | :-- | :-- | :-- |
 | `bridge` | `relay` | Logical bridge route name from config. |
-| `from_cluster` | `relay` | Source cluster key from `bridges[].from.cluster`. |
+| `from_kafka_cluster` | `relay` | Source cluster key from `bridges[].from.cluster`. |
 | `from_topic` | `relay` | Source topic from `bridges[].from.topic`. |
-| `to_cluster` | `relay` | Destination cluster key from `bridges[].to.cluster`. |
+| `to_kafka_cluster` | `relay` | Destination cluster key from `bridges[].to.cluster`. |
 | `to_topic` | `relay` | Destination topic from `bridges[].to.topic`. |
 | `stage` | `relay` | Relay error stage (`poll`, `produce`, `commit`, `route`). |
-| `cluster` | `kafka`, `tls`, `tcp` | Cluster key associated with broker hook events. |
+| `kafka_cluster` | `kafka`, `tls`, `tcp` | Cluster key associated with broker hook events. |
 | `tls_version` | `tls` | Negotiated TLS protocol version (`1.2`, `1.3`, `unknown`). |
 
 Additional labels may appear when `metrics.extra_labels` is configured; those are user-defined constant labels attached to all metric families.
@@ -39,11 +39,11 @@ Additional labels may appear when `metrics.extra_labels` is configured; those ar
 
 | Metric | Type | Labels | Description |
 | :-- | :-- | :-- | :-- |
-| `bifrost_relay_messages_total` | `Counter` | `bridge`, `from_cluster`, `from_topic`, `to_cluster`, `to_topic` | Count of records relayed successfully (produce + commit completed). |
-| `bifrost_relay_errors_total` | `Counter` | `bridge`, `from_cluster`, `from_topic`, `to_cluster`, `to_topic`, `stage` | Count of relay errors by stage (`poll`, `produce`, `commit`, `route`). |
-| `bifrost_relay_produce_duration_seconds` | `Histogram` | `bridge`, `from_cluster`, `from_topic`, `to_cluster`, `to_topic` | Histogram of to-side produce time per synchronous relay produce call (one record when `batch_size=1`, otherwise one source-partition batch). |
-| `bifrost_relay_consumer_seconds_total` | `Counter` | `bridge`, `from_cluster`, `from_topic`, `to_cluster`, `to_topic`, `state` | Wall-clock seconds attributed to consumer state. `state` is `busy` when poll returns records, otherwise `idle`. |
-| `bifrost_relay_producer_seconds_total` | `Counter` | `bridge`, `from_cluster`, `from_topic`, `to_cluster`, `to_topic`, `state` | Wall-clock seconds attributed to producer state. `state` is `busy` during produce attempts, `idle` during no-work poll intervals and retry backoff sleeps. |
+| `bifrost_relay_messages_total` | `Counter` | `bridge`, `from_kafka_cluster`, `from_topic`, `to_kafka_cluster`, `to_topic` | Count of records relayed successfully (produce + commit completed). |
+| `bifrost_relay_errors_total` | `Counter` | `bridge`, `from_kafka_cluster`, `from_topic`, `to_kafka_cluster`, `to_topic`, `stage` | Count of relay errors by stage (`poll`, `produce`, `commit`, `route`). |
+| `bifrost_relay_produce_duration_seconds` | `Histogram` | `bridge`, `from_kafka_cluster`, `from_topic`, `to_kafka_cluster`, `to_topic` | Histogram of to-side produce time per synchronous relay produce call (one record when `batch_size=1`, otherwise one source-partition batch). |
+| `bifrost_relay_consumer_seconds_total` | `Counter` | `bridge`, `from_kafka_cluster`, `from_topic`, `to_kafka_cluster`, `to_topic`, `state` | Wall-clock seconds attributed to consumer state. `state` is `busy` when poll returns records, otherwise `idle`. |
+| `bifrost_relay_producer_seconds_total` | `Counter` | `bridge`, `from_kafka_cluster`, `from_topic`, `to_kafka_cluster`, `to_topic`, `state` | Wall-clock seconds attributed to producer state. `state` is `busy` during produce attempts, `idle` during no-work poll intervals and retry backoff sleeps. |
 
 ### Idle Percentage Queries
 
@@ -53,11 +53,11 @@ Consumer idle %:
 
 ```promql
 100 *
-sum by (bridge, from_cluster, from_topic, to_cluster, to_topic) (
+sum by (bridge, from_kafka_cluster, from_topic, to_kafka_cluster, to_topic) (
   rate(bifrost_relay_consumer_seconds_total{state="idle"}[5m])
 )
 /
-sum by (bridge, from_cluster, from_topic, to_cluster, to_topic) (
+sum by (bridge, from_kafka_cluster, from_topic, to_kafka_cluster, to_topic) (
   rate(bifrost_relay_consumer_seconds_total[5m])
 )
 ```
@@ -66,14 +66,30 @@ Producer idle %:
 
 ```promql
 100 *
-sum by (bridge, from_cluster, from_topic, to_cluster, to_topic) (
+sum by (bridge, from_kafka_cluster, from_topic, to_kafka_cluster, to_topic) (
   rate(bifrost_relay_producer_seconds_total{state="idle"}[5m])
 )
 /
-sum by (bridge, from_cluster, from_topic, to_cluster, to_topic) (
+sum by (bridge, from_kafka_cluster, from_topic, to_kafka_cluster, to_topic) (
   rate(bifrost_relay_producer_seconds_total[5m])
 )
 ```
+
+## Labels Added By Prometheus/Alloy
+
+Prometheus and Alloy scrapes typically attach target identity labels such as `job` and `instance`, and may also attach discovery/relabel-derived infrastructure labels (for example `cluster`, `namespace`, `pod`, `service`) depending on your pipeline configuration.
+
+Prometheus/Alloy pipelines can also be configured to add or rewrite labels via relabeling and service-discovery metadata promotion. Since those labels may vary by environment, avoid using the following keys in `metrics.extra_labels` to prevent exact or semantic collisions:
+
+- `job`
+- `instance`
+- `cluster`
+- `namespace`
+- `pod`
+- `service`
+- any label matching `^__.*__$`
+
+At startup, bifrost logs a warning if any configured `metrics.extra_labels` keys match the reserved list above.
 
 ## kafka
 

@@ -897,7 +897,7 @@ metrics:
   enabled: true
   listen_addr: ":9090"
   extra_labels:
-    "from_cluster": source
+    "bridge": source
 logging:
   level: info
   stream: stdout

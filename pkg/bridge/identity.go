@@ -6,9 +6,9 @@ import bifrostconfig "github.com/lolocompany/bifrost/pkg/config"
 // Keep in sync with Identity.LabelValues.
 var LabelNames = []string{
 	"bridge",
-	"from_cluster",
+	"from_kafka_cluster",
 	"from_topic",
-	"to_cluster",
+	"to_kafka_cluster",
 	"to_topic",
 }
 

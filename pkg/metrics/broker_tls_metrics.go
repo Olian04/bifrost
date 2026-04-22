@@ -21,7 +21,7 @@ func newTLSBrokerMetrics(labelCluster []string) *tlsBrokerMetrics {
 			Name: "bifrost_tls_handshakes_total",
 			Help: "Completed TLS handshakes to Kafka brokers, labeled by bifrost cluster and TLS version.",
 		},
-		[]string{"cluster", "tls_version"},
+		append(append([]string(nil), labelCluster...), "tls_version"),
 	)
 	t.handshakeErrs = prometheus.NewCounterVec(
 		prometheus.CounterOpts{

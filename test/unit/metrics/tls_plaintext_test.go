@@ -62,7 +62,7 @@ func TestTLSMetrics_plaintextBrokerConnectDoesNotIncrementHandshakeErrors(t *tes
 	if err != nil {
 		t.Fatalf("Gather: %v", err)
 	}
-	if got := counterValueOrZero(fams, "bifrost_tls_handshake_errors_total", "cluster", "plain-cluster"); got != 0 {
+	if got := counterValueOrZero(fams, "bifrost_tls_handshake_errors_total", "kafka_cluster", "plain-cluster"); got != 0 {
 		t.Fatalf("handshake error count = %v, want 0", got)
 	}
 }

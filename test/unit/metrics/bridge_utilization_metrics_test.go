@@ -80,12 +80,12 @@ func assertCounterValue(t *testing.T, fams []*dto.MetricFamily, name string, lab
 		t.Fatalf("missing metric family %q", name)
 	}
 	expected := map[string]string{
-		"bridge":       labels[0],
-		"from_cluster": labels[1],
-		"from_topic":   labels[2],
-		"to_cluster":   labels[3],
-		"to_topic":     labels[4],
-		"state":        labels[5],
+		"bridge":             labels[0],
+		"from_kafka_cluster": labels[1],
+		"from_topic":         labels[2],
+		"to_kafka_cluster":   labels[3],
+		"to_topic":           labels[4],
+		"state":              labels[5],
 	}
 	for _, m := range mf.GetMetric() {
 		if metricMatchesLabels(m, expected) {

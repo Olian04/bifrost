@@ -7,6 +7,9 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"regexp"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/lolocompany/bifrost/pkg/config"
@@ -39,6 +42,14 @@ func (m *MetricsRegistry) StopServer() {
 // NewFromConfig registers collectors from cfg and starts the /metrics HTTP server when enabled.
 func NewFromConfig(cfg config.Config) (MetricsRegistry, error) {
 	reg := prometheus.NewRegistry()
+	if conflicts := conflictingReservedOrBuiltInLabels(cfg.Metrics.ExtraLabels); len(conflicts) > 0 {
+		slog.Warn(
+			"metrics.extra_labels include reserved scrape labels or built-in metric variable labels; this may cause exact or semantic label collisions",
+			"conflicting_extra_labels", conflicts,
+			"reserved_scrape_labels", append(sortedLabelSetKeys(reservedScrapeLabels), reservedInternalLabelRE.String()),
+			"built_in_metric_labels", sortedLabelSetKeys(builtInMetricVariableLabels),
+		)
+	}
 	registerer := wrapRegistererWithExtraLabels(reg, cfg.Metrics.ExtraLabels)
 	m := cfg.Metrics
 
@@ -83,6 +94,51 @@ func wrapRegistererWithExtraLabels(reg *prometheus.Registry, extraLabels map[str
 		labels[k] = v
 	}
 	return prometheus.WrapRegistererWith(labels, reg)
+}
+
+var reservedScrapeLabels = map[string]struct{}{
+	"job": {}, "instance": {}, "cluster": {}, "namespace": {}, "pod": {}, "service": {},
+}
+
+var reservedInternalLabelRE = regexp.MustCompile(`^__.*__$`)
+
+var builtInMetricVariableLabels = map[string]struct{}{
+	"bridge": {}, "from_kafka_cluster": {}, "from_topic": {}, "to_kafka_cluster": {}, "to_topic": {},
+	"stage": {}, "state": {}, "kafka_cluster": {}, "tls_version": {}, "le": {}, "quantile": {},
+}
+
+func conflictingReservedOrBuiltInLabels(extraLabels map[string]string) []string {
+	if len(extraLabels) == 0 {
+		return nil
+	}
+	conflicts := make([]string, 0, len(extraLabels))
+	for key := range extraLabels {
+		name := strings.TrimSpace(key)
+		if name == "" {
+			continue
+		}
+		if _, ok := reservedScrapeLabels[name]; ok || reservedInternalLabelRE.MatchString(name) {
+			conflicts = append(conflicts, name)
+			continue
+		}
+		if _, ok := builtInMetricVariableLabels[name]; ok {
+			conflicts = append(conflicts, name)
+		}
+	}
+	if len(conflicts) == 0 {
+		return nil
+	}
+	sort.Strings(conflicts)
+	return conflicts
+}
+
+func sortedLabelSetKeys(set map[string]struct{}) []string {
+	keys := make([]string, 0, len(set))
+	for key := range set {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type errorLogger struct {

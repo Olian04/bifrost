@@ -22,4 +22,10 @@ func TestBridgeIdentityLabelCountMatchesVec(t *testing.T) {
 	if len(bridge.LabelNames) != len(id.LabelValues()) {
 		t.Fatalf("LabelNames has %d names but LabelValues() has %d values", len(bridge.LabelNames), len(id.LabelValues()))
 	}
+	wantNames := []string{"bridge", "from_kafka_cluster", "from_topic", "to_kafka_cluster", "to_topic"}
+	for i, want := range wantNames {
+		if bridge.LabelNames[i] != want {
+			t.Fatalf("LabelNames[%d] = %q, want %q", i, bridge.LabelNames[i], want)
+		}
+	}
 }

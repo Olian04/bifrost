@@ -30,7 +30,7 @@ func newBrokerMetrics(reg prometheus.Registerer, g config.MetricGroups) (BrokerM
 		return BrokerMetrics{}, nil
 	}
 
-	labelCluster := []string{"cluster"}
+	labelCluster := []string{"kafka_cluster"}
 	bm := BrokerMetrics{}
 	if kafkaOn {
 		bm.Kafka = newKafkaBrokerMetrics(labelCluster)

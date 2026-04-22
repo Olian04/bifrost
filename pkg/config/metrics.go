@@ -58,8 +58,8 @@ func (m *Metrics) validate() error {
 var promLabelNameRE = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
 var metricVariableLabels = map[string]struct{}{
-	"bridge": {}, "from_cluster": {}, "from_topic": {}, "to_cluster": {}, "to_topic": {},
-	"stage": {}, "cluster": {}, "tls_version": {}, "le": {}, "quantile": {},
+	"bridge": {}, "from_kafka_cluster": {}, "from_topic": {}, "to_kafka_cluster": {}, "to_topic": {},
+	"stage": {}, "kafka_cluster": {}, "tls_version": {}, "le": {}, "quantile": {},
 }
 
 func validateMetricsExtraLabels(labels map[string]string) error {

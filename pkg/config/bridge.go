@@ -23,7 +23,7 @@ type Bridge struct {
 	// across group members.
 	Replicas int `yaml:"replicas"`
 	// BatchSize controls how many source records from the same topic-partition are produced and
-	// committed together. Omit or set 0 to use 1.
+	// committed together. Omit or set 0 to use the default throughput-oriented batch size.
 	BatchSize int `yaml:"batch_size"`
 	// MaxInFlightBatches caps concurrently produced batches per bridge replica. Omit or set 0 to
 	// use a conservative elastic default.
@@ -132,7 +132,7 @@ func (b *Bridge) EffectiveConsumerGroup() string {
 	return "bifrost-" + sanitizeName(b.Name)
 }
 
-// EffectiveBatchSize returns the configured batch size, defaulting to 1 when omitted or zero.
+// EffectiveBatchSize returns the configured batch size, defaulting when omitted or zero.
 func (b *Bridge) EffectiveBatchSize() int {
 	if b == nil || b.BatchSize == 0 {
 		return DefaultBridgeBatchSize

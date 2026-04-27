@@ -8,19 +8,19 @@ The **throughput-oriented** profile matches bifrost defaults.
 
 | Profile | Primary goal | Key settings |
 | :-- | :-- | :-- |
-| Throughput-oriented (default) | Max message rate with acceptable duplicate risk | `producer.required_acks=leader`, `max_in_flight_batches=64`, `commit_interval=1s`, `commit_max_records=1024` |
-| Durability-oriented | Minimize data-loss risk on broker failure | `producer.required_acks=all`, lower in-flight, faster commit flush |
-| Resource-constrained | Keep CPU/memory/network pressure low | lower in-flight, lower batching pressure, slower commit cadence |
+| Throughput-oriented (default) | Max message rate with acceptable duplicate risk | `batch_size=500`, `producer.required_acks=leader`, `max_in_flight_batches=64`, `commit_interval=1s`, `commit_max_records=4096` |
+| Durability-oriented | Minimize data-loss risk on broker failure | `batch_size=100`, `producer.required_acks=all`, lower in-flight, faster commit flush |
+| Resource-constrained | Keep CPU/memory/network pressure low | `batch_size=50`, lower in-flight, slower commit cadence |
 
 ## Throughput-Oriented (Default)
 
 ```yaml
 bridges:
   - name: prod-to-dev
-    batch_size: 1
+    batch_size: 500
     max_in_flight_batches: 64
     commit_interval: "1s"
-    commit_max_records: 1024
+    commit_max_records: 4096
 
 clusters:
   prod:
@@ -33,12 +33,14 @@ Pros:
 - Highest throughput potential under sustained load.
 - Best utilization of destination producer parallelism.
 - Fewer commit RPCs per message than low-interval profiles.
+- Better throughput-per-CPU in high-volume relay workloads.
 
 Cons:
 
 - Lower durability than `required_acks: all` during replica failure windows.
 - Higher in-flight memory footprint during bursts.
 - More potential duplicates after crashes than tighter commit cadence.
+- Larger commit window means replay chunk after crash can be bigger than strict-durability settings.
 
 Best for:
 
@@ -49,10 +51,10 @@ Best for:
 ```yaml
 bridges:
   - name: prod-to-dev
-    batch_size: 1
+    batch_size: 100
     max_in_flight_batches: 8
     commit_interval: "200ms"
-    commit_max_records: 256
+    commit_max_records: 1024
 
 clusters:
   prod:
@@ -81,10 +83,10 @@ Best for:
 ```yaml
 bridges:
   - name: prod-to-dev
-    batch_size: 1
+    batch_size: 50
     max_in_flight_batches: 4
     commit_interval: "2s"
-    commit_max_records: 512
+    commit_max_records: 1024
 
 clusters:
   prod:
@@ -115,7 +117,7 @@ Best for:
 | :-- | :-- | :-- | :-- |
 | Throughput ceiling | Highest | Lowest | Medium-low |
 | Destination durability | Medium (`leader`) | Highest (`all`) | Medium (`leader`) |
-| Duplicate replay window | Medium | Lowest | Highest |
+| Duplicate replay window | Highest | Lowest | Medium-high |
 | CPU/memory use | Highest | Medium | Lowest |
 | Commit RPC pressure | Medium | Highest | Lowest |
 

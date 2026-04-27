@@ -281,15 +281,15 @@ func TestEffectiveConsumerGroup_explicit(t *testing.T) {
 func TestBridgeEffectiveBatchSize_defaultAndExplicit(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
 		b := config.Bridge{}
-		if got := b.EffectiveBatchSize(); got != 1 {
-			t.Fatalf("default batch size: want 1, got %d", got)
+		if got := b.EffectiveBatchSize(); got != config.DefaultBridgeBatchSize {
+			t.Fatalf("default batch size: want %d, got %d", config.DefaultBridgeBatchSize, got)
 		}
 	})
 
-	t.Run("zero_means_disabled_batching", func(t *testing.T) {
+	t.Run("zero_uses_default_batch_size", func(t *testing.T) {
 		b := config.Bridge{BatchSize: 0}
-		if got := b.EffectiveBatchSize(); got != 1 {
-			t.Fatalf("zero batch size: want 1, got %d", got)
+		if got := b.EffectiveBatchSize(); got != config.DefaultBridgeBatchSize {
+			t.Fatalf("zero batch size: want %d, got %d", config.DefaultBridgeBatchSize, got)
 		}
 	})
 
@@ -475,8 +475,8 @@ logging:
 		if err != nil {
 			t.Fatalf("Parse: %v", err)
 		}
-		if got := cfg.Bridges[0].EffectiveBatchSize(); got != 1 {
-			t.Fatalf("default batch size: want 1, got %d", got)
+		if got := cfg.Bridges[0].EffectiveBatchSize(); got != config.DefaultBridgeBatchSize {
+			t.Fatalf("default batch size: want %d, got %d", config.DefaultBridgeBatchSize, got)
 		}
 	})
 

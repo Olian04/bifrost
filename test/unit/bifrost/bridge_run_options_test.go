@@ -78,7 +78,7 @@ func TestBridgeRunOptions_UsesRetryDefaultsWhenOmitted(t *testing.T) {
 		t.Fatalf("BridgeRunOptions: %v", err)
 	}
 
-	if got, want := opts.BatchSize, 1; got != want {
+	if got, want := opts.BatchSize, config.DefaultBridgeBatchSize; got != want {
 		t.Fatalf("BatchSize = %d, want %d", got, want)
 	}
 	if opts.OverridePartition != nil {

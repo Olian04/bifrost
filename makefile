@@ -1,7 +1,7 @@
 # All targets are phony (no file named "build", "test", etc. should shadow these).
 .PHONY: bench bench-full bench-profile-block bench-profile-cpu bench-profile-mem bench-profile-trace \
-	build build-release build-docker codequality-baseline codequality-gate codequality-review codequality-scorecard format help lint \
-	test test-coverage test-integration test-process-integration test-regression
+	build build-release build-docker codequality-baseline codequality-gate codequality-review codequality-scorecard format help lint lint-ci \
+	test test-coverage test-integration test-process-integration test-race test-regression test-unit
 
 # Isolated Redpanda per benchmark: wall time grows with container churn; allow a generous cap.
 BENCH_PATTERN ?= BenchmarkBridgeRelay256B|BenchmarkKafkaRoundTrip256B|BenchmarkBridgeRelayBurst256B
@@ -29,11 +29,14 @@ help:
 	@printf '  %-30s %s\n' 'format' 'go fmt + gofmt -w'
 	@printf '  %-30s %s\n' 'help' 'Show this message'
 	@printf '  %-30s %s\n' 'lint' 'go vet, go mod verify, govulncheck/gosec (go tool), golangci-lint'
+	@printf '  %-30s %s\n' 'lint-ci' 'CI lint gate (lint + staticcheck + errcheck + revive)'
 	@printf '  %-30s %s\n' 'codequality-scorecard' 'Build codequality scorecard JSON/Markdown'
 	@printf '  %-30s %s\n' 'codequality-baseline' 'Capture baseline codequality snapshot for regression gating'
 	@printf '  %-30s %s\n' 'codequality-gate' 'Run codequality gate checks (absolute + regression)'
 	@printf '  %-30s %s\n' 'codequality-review' 'Generate scorecard and print top hotspots for weekly triage'
-	@printf '  %-30s %s\n' 'test' 'Unit tests (./test/unit/...)'
+	@printf '  %-30s %s\n' 'test' 'Alias for test-unit'
+	@printf '  %-30s %s\n' 'test-unit' 'Unit tests (./test/unit/...)'
+	@printf '  %-30s %s\n' 'test-race' 'Unit tests with race detector (./test/unit/...)'
 	@printf '  %-30s %s\n' 'test-coverage' 'Integration + unit tests; coverage.out + HTML (-coverpkg ./pkg/...; ./test/...)'
 	@printf '  %-30s %s\n' 'test-integration' 'Integration tests (BIFROST_INTEGRATION=1; ./test/integration/...)'
 	@printf '  %-30s %s\n' 'test-process-integration' 'Process-driven integration tests (CLI + Kafka + metrics)'
@@ -45,6 +48,13 @@ lint:
 	go tool govulncheck ./...
 	go tool gosec -fmt text -stdout -quiet ./...
 	golangci-lint run ./...
+
+lint-ci:
+	go vet ./cmd/... ./pkg/... ./test/unit/...
+	go mod verify
+	golangci-lint run ./cmd/... ./pkg/... ./test/unit/...
+	go run github.com/kisielk/errcheck@latest ./cmd/... ./pkg/... ./test/unit/...
+	go run github.com/mgechev/revive@latest -config revive.toml -formatter stylish ./cmd/... ./pkg/... ./test/unit/...
 
 codequality-scorecard:
 	python3 scripts/codequality_pipeline.py --output-prefix scorecard
@@ -75,7 +85,13 @@ build-release:
 	BIFROST_BUILD_TIME=$(BUILD_TIME) RELEASE_NAME=local-snapshot RELEASE_BODY='Local snapshot (not a production release).' goreleaser release --snapshot --clean --skip=publish,validate --config goreleaser/.goreleaser.yaml
 
 test:
+	$(MAKE) test-unit
+
+test-unit:
 	go test -shuffle=on -timeout 120s ./test/unit/...
+
+test-race:
+	go test -race -shuffle=on -timeout 180s ./test/unit/...
 
 test-integration:
 	BIFROST_INTEGRATION=1 go test -shuffle=on -timeout 120s ./test/integration/...

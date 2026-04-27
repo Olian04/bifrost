@@ -1,7 +1,7 @@
 # All targets are phony (no file named "build", "test", etc. should shadow these).
 .PHONY: bench bench-full bench-profile-block bench-profile-cpu bench-profile-mem bench-profile-trace \
 	build build-release build-docker codequality-baseline codequality-gate codequality-review codequality-scorecard format help lint \
-	test test-coverage test-integration
+	test test-coverage test-integration test-process-integration test-regression
 
 # Isolated Redpanda per benchmark: wall time grows with container churn; allow a generous cap.
 BENCH_PATTERN ?= BenchmarkBridgeRelay256B|BenchmarkKafkaRoundTrip256B|BenchmarkBridgeRelayBurst256B
@@ -36,6 +36,8 @@ help:
 	@printf '  %-30s %s\n' 'test' 'Unit tests (./test/unit/...)'
 	@printf '  %-30s %s\n' 'test-coverage' 'Integration + unit tests; coverage.out + HTML (-coverpkg ./pkg/...; ./test/...)'
 	@printf '  %-30s %s\n' 'test-integration' 'Integration tests (BIFROST_INTEGRATION=1; ./test/integration/...)'
+	@printf '  %-30s %s\n' 'test-process-integration' 'Process-driven integration tests (CLI + Kafka + metrics)'
+	@printf '  %-30s %s\n' 'test-regression' 'Config-driven regression tests (Docker; keeps artifacts)'
 
 lint:
 	go vet ./...
@@ -77,6 +79,12 @@ test:
 
 test-integration:
 	BIFROST_INTEGRATION=1 go test -shuffle=on -timeout 120s ./test/integration/...
+
+test-process-integration:
+	BIFROST_INTEGRATION=1 go test -shuffle=on -timeout 180s ./test/integration/...
+
+test-regression:
+	BIFROST_INTEGRATION=1 go test -shuffle=on -timeout 300s ./test/regression/...
 
 # Tests live under test/..., so default -cover only sees external test packages (no pkg statements) → 0%.
 # -coverpkg instruments pkg/ and cmd/ when those packages are exercised from test/ packages.

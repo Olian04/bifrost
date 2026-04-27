@@ -41,11 +41,14 @@ go.work.sum
 # OS X
 .DS_Store
 bifrost
-!cmd/*
-!pkg/*
+!cmd/**/*
+!pkg/**/*
+!test/**/*
 bench.txt
 bench.err
 tmp
+
+test/unit/benchmark/.prof/
 
 # GoReleaser build output
 dist/
@@ -55,3 +58,4 @@ reports/codequality/raw/
 reports/codequality/snapshots/
 reports/codequality/*scorecard.json
 reports/codequality/*scorecard.md
+test/.artifacts

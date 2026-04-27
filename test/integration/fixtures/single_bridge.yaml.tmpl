@@ -1,0 +1,48 @@
+clusters:
+  {{ .FromCluster }}:
+    brokers:
+{{- range .BrokersFrom }}
+      - '{{ . }}'
+{{- end }}
+  {{ .ToCluster }}:
+    brokers:
+{{- range .BrokersTo }}
+      - '{{ . }}'
+{{- end }}
+
+bridges:
+  - name: '{{ .BridgeName }}'
+    replicas: {{ .Replicas }}
+    batch_size: {{ .BatchSize }}
+    consumer_group: '{{ .ConsumerGroup }}'
+    from:
+      cluster: '{{ .FromCluster }}'
+      topic: '{{ .FromTopic }}'
+    to:
+      cluster: '{{ .ToCluster }}'
+      topic: '{{ .ToTopic }}'
+{{- if .HasOverrideKey }}
+    override_key: '{{ .OverrideKey }}'
+{{- end }}
+{{- if .ExtraHeaders }}
+    extra_headers:
+{{- range $k, $v := .ExtraHeaders }}
+      {{ $k }}: '{{ $v }}'
+{{- end }}
+{{- end }}
+
+metrics:
+  enabled: true
+  listen_addr: '{{ .MetricsAddr }}'
+  groups:
+    golang: true
+    process: true
+    kafka: true
+    tls: true
+    tcp: true
+
+logging:
+  level: info
+  format: json
+  stream: stdout
+  periodic_stats_interval: '0'

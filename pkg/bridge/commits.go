@@ -70,6 +70,9 @@ func flushCommits(cc commitContext) error {
 	for i := 0; i < pending; i++ {
 		cc.retry.metrics.IncMessages(cc.retry.id)
 	}
+	if pending < 0 {
+		return fmt.Errorf("pending committed records cannot be negative: %d", pending)
+	}
 	cc.msgsRelayed.Add(uint64(pending))
 	return nil
 }

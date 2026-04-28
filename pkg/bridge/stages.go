@@ -13,4 +13,3 @@ const (
 	RelayStateBusy = "busy"
 	RelayStateIdle = "idle"
 )
-

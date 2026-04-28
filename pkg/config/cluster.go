@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	DefaultClientDialTimeout    = 10 * time.Second
-	DefaultPingTimeout          = 30 * time.Second
-	DefaultBridgeBatchSize      = 500
-	DefaultMaxInFlightBatches   = 64
-	DefaultCommitInterval       = 1 * time.Second
-	DefaultCommitMaxRecords     = 4096
-	DefaultProducerRequiredAcks = "leader"
+	DefaultClientDialTimeout      = 10 * time.Second
+	DefaultPingTimeout            = 30 * time.Second
+	DefaultBridgeBatchSize        = 500
+	DefaultMaxInFlightBatches     = 64
+	DefaultCommitInterval         = 1 * time.Second
+	DefaultCommitMaxRecords       = 4096
+	DefaultProducerRequiredAcks   = "leader"
 	DefaultDisableIdempotentWrite = true
 )
 

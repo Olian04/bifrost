@@ -31,6 +31,9 @@ lint-ci: ## Run CI lint gate for cmd/pkg/unit tests
 	go run github.com/kisielk/errcheck@latest ./cmd/... ./pkg/... ./test/unit/...
 	go run github.com/mgechev/revive@latest -config revive.toml -formatter stylish ./cmd/... ./pkg/... ./test/unit/...
 
+complexity-explorer: ## Run complexity explorer
+	go tool complexity-explorer
+
 codequality-scorecard: ## Build codequality scorecard JSON/Markdown
 	python3 scripts/codequality_pipeline.py --output-prefix scorecard
 

@@ -23,6 +23,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/Olian04/go-complexity-explorer v0.0.0-20260428141738-e19b9231e506 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/anthropics/anthropic-sdk-go v1.26.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -41,6 +42,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -83,6 +85,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.12.0 // indirect
+	github.com/uudashr/gocognit v1.2.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
@@ -109,6 +112,7 @@ require (
 )
 
 tool (
+	github.com/Olian04/go-complexity-explorer/cmd/complexity-explorer
 	github.com/securego/gosec/v2/cmd/gosec
 	golang.org/x/perf/cmd/benchstat
 	golang.org/x/vuln/cmd/govulncheck
